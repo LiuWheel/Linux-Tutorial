@@ -1,3 +1,203 @@
 如若转载，请注明文章出处！
 
 Linux系列学习笔记包括多讲，这是第一讲，具体markdown代码笔记可以到我的github下载。
+
+如若转载，请注明文章出处！
+[https://github.com/LiuWheel/Linux-Tutorial/blob/master/Linux%20Tutorial%201](https://github.com/LiuWheel/Linux-Tutorial/blob/master/Linux%20Tutorial%201)
+Linux系列学习笔记包括多讲，这是第一讲，具体markdown代码笔记可以到我的[github](https://github.com/LiuWheel/Linux-Tutorial/blob/master/Linux%20Tutorial%201)下载。
+#### Linux的一些注意事项
+* Linux严格区分大小写。
+* Linux中所有内容以文件形式保存，包括$\color{red}{硬件}$,对于硬件的操作都是操作文件。
+  * 硬盘文件是/dev/sd[a-p]
+  * 光盘文件是/dev/sr0等
+* 对于一些环境变量、网络设置等修改，只使用命令行进行修改只是$\color{red}{临时生效的}$，必须修改配置文件里才长久有效。
+* Linux不靠扩展名区分文件类型，靠文件权限进行区分。有一些扩展名是为了让管理员更好的区分。
+* Linux所有的存储设备都必须挂载之后用户才能使用，包括硬盘、U盘和光盘。
+  * 挂载类似于分配盘符的操作，在windows中是自动的，linux中要手动挂载。
+*  Linux各目录作用说明，如下图所示：
+    * bin用于存放可执行二进制命令文件
+    * sbin属于超级用户的命令
+    * 尽量不要在/boot文件下写，因为最初/boot分配了200M,当写满时系统可能起不来；当系统有重大作用时，要备份一下/boot文件
+    * /dev经常使用的串口等硬件就在这个文件中
+    * /etc系统的配置文件，例如系统的更新源的修改 `sudo nano /etc/apt/sources/list`
+    * /lost+found目录可用于断电修复
+    * /opt用于放置第三方安装软件，$\color{red}{但是目前整个行业都是习惯将第三方安装文件放在/usr/local/的目录下，这一点要注意！}$
+    * /proc与/sys是存在于内存中的文件，因为内存是只读的，断电则消失。
+    * /usr 不是user的缩写，而是”Unix Software Resource“系统软件资源目录。
+![1.png](https://upload-images.jianshu.io/upload_images/21240633-a274f1807419a2e0.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![2.png](https://upload-images.jianshu.io/upload_images/21240633-289e8b84f1ace67e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![3.png](https://upload-images.jianshu.io/upload_images/21240633-6d11c4ada815df3f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+* 服务器注意事项
+    * 远程服务器不允许关机，只能重启。例如，你的树莓派在远程采集图像，你在家将它关闭，如何开启呢？？
+    * 重启时应该关闭服务。
+    * 不要在服务器访问高峰运行高负载命令。
+    * 远程配置防火墙时不要把自己提出服务器。
+    * 定期备份重要数据和日志
+    * 合理分配权限
+    * 指定合理的密码规范并定期更新
+
+#### Linux常用命令
+##### 1 文件处理命令
+###### 1.1 命令格式与目录处理命令ls
+**命令格式**： `命令 [-选项] [参数]`
+```
+ls -la /etc
+```
+**说明**：
+* 个别命令使用不遵循此格式
+* 当有多个选项时，可以写在一起
+* 简化选项用一个-与完整选项用--
+    * -a 等于 --all
+
+**目录处理命令：ls**
+命令所在路径：/bin/ls
+执行权限：所有用户
+功能：显示目录文件
+语法：```ls [-ald] [文件或目录]```
+`-a 显示所有文件，包括隐藏文件`
+`-l 详细信息显示`
+`-d 查看目录属性`
+Linux中以.开头的为隐藏文件，例如.bashrc文件。
+![4.png](https://upload-images.jianshu.io/upload_images/21240633-8032f482cc41c6d6.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+```
+在terminal中输入：
+ls -al
+可以显示如下
+```
+上图中，第2列为文件调用修改的次数，第3列为文件的所属用户，第4列为所属用户组，第5列为文件的大小，上图中显示的是字节；第6列为文件最有一次修改时间，第7列为文件名称。
+```
+在terminal中输入：
+ls -lh
+可以显示如下，h为人类的意思
+```
+![5.png](https://upload-images.jianshu.io/upload_images/21240633-224eb8c0eabd60ce.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+加入h后，上图的文件大小就可以清晰的看到占用的存储空间了。
+下面将详细介绍第1列中是个字符的具体含义：
+drwxr-xr-x
+第一位：文件类型（`-`表示二进制文件,`d`表示目录，`l`表示软链接文件）。
+系统把文件分为所有者、所属组、其他人，因此系统把后九位，每三位依次表示u所有者，g所属组，o其他人的权限。权限分为三种：`r`读，`w`写，`x`执行。
+```
+rwx------
+ u  g  o
+也就是说这个文件，所有者的权限可以读r写w执行x;而所属组和其他人则无权限。
+``` 
+两个小区别：
+```
+ls -ld /etc
+查看/etc文件的信息
+ls -l /etc
+查看/etc文件下所有文件的信息
+```
+Linux中每个文件都具备自己的id号。查看文件的id号可以使用指令`ls -i`
+mkdir可以同时创建多个目录。
+###### 1.2 目录处理命令
+**mkdir**
+命令所在路径：/bin/mkdir
+执行权限：所有用户
+功能：创建新目录
+语法：```mkdir [-p] [目录名]``` `-p` 递归创建
+**pwd**
+命令所在路径：/bin/pwd
+执行权限：所有用户
+功能：查看目前路径
+语法：`pwd`
+
+`.`表示当前目录，`..`表示当前目录的上一级目录。
+**rmdir**
+命令所在路径：/bin/rmdir
+执行权限：所有用户
+功能：删除$\color{red}{空目录}$
+语法：`rmdir [目录名]`
+范例：`rmdir /tmp/Japan/boduo`
+**cp**
+命令所在路径：/bin/cp
+执行权限：所有用户
+功能：复制文件或目录
+语法：`cp -rp [原文件或目录] [目标目录]`
+`-r` 复制目录
+`-p` 保留文件属性（包括文件最后修改时间）
+**边复制边改名**
+范例：`cp -r /tmp/Japan/boduo /root/longze`
+**mv**
+命令所在路径：/bin/mv
+执行权限：所有用户
+功能：剪切文件、改名
+语法：`mv [原文件或目录] [目标目录]`
+范例：`mv /tmp/Japan/boduo /root 绝对路径`
+`mv boduo /root 相对路径`
+改名范例：`mv /tmp/Japan/boduo /root/nvshen  将boduo移动到root下改名为nvshen`
+**rm**
+命令所在路径：/bin/rm
+执行权限：所有用户
+功能：删除文件
+语法：`rm -rf [文件或目录]`
+`-r 删除目录`
+`-f 强制执行`
+###### 1.3 文件处理命令
+**touch**
+命令所在路径：/bin/touch
+执行权限：所有用户
+功能：创建空文件
+语法：`rm helloworld.py`
+**cat**
+命令所在路径：/bin/cat
+执行权限：所有用户
+功能：显示文件内容
+语法：`cat [文件名]`
+`-n 显示行号`
+范例：`cat /etc/issue`
+`cat -n /etc/services`
+cat不适合查看文件内容很长的文件，可以用more查看长文件。
+**tac**
+命令所在路径：/usr/bin/tac
+执行权限：所有用户
+功能：显示文件内容(反向列示)
+语法：`tac [文件名]`
+范例：`tac /etc/issue`
+**more**
+命令所在路径：/bin/more
+执行权限：所有用户
+功能：分页显示文件内容
+语法：`more [文件名]`
+`空格 或 f  翻页`
+`Enter     换行`
+`q或Q      退出`
+范例：`more /etc/services`
+注意：$\color{red}{more命令不可向上翻页,可使用less}$
+**less**
+命令所在路径：/usr/bin/less
+执行权限：所有用户
+功能：分页显示文件内容(可向上翻页)
+范例：`less /etc/services`
+`pgup`向上翻页，`上箭头`表示向上翻一行。
+在less中，可以输入`/ 查找`的字符，就可以找到所有想查找的字符,按下`n`可以跳到下一个位置。
+**head**
+命令所在路径：/usr/bin/head
+执行权限：所有用户
+功能：显示文件前面几行
+`-n` 指定行数
+范例：`head -n 20 /etc/services`
+如果不指定显示的行数，则默认显示前10行。
+**tail**
+命令所在路径：/usr/bin/tail
+执行权限：所有用户
+语法：tail [文件名]
+功能：显示文件后面几行
+`-n` 指定行数
+`-f` 动态显示文件末尾内容
+范例：`tail -n 18 /etc/services`
+如果不指定显示的行数，则默认显示后10行。
+`-f`会实时显示文件内容的变化。可以用此命令查看日志文件，判断系统是否有操作。
+
+###### 1.4 链接命令
+**ln**
+命令所在路径：/bin/ln
+执行权限：所有用户
+语法：`ln -s [原文件] [目标文件]`
+`-s 创建软链接`
+功能：生成链接文件
+范例：`ln -s /usr/bin/python2 /usr/bin/python` 生成软链接
+`ln /usr/bin/python2 /usr/bin/python` 生成硬链接
+可以使用命令`ls -l /usr/bin/python`查看文件的链接指向方式。
+软链接为：lrwxrwxrwx，类似于windows快捷方式，只是符号链接，有箭头指向源文件，软链接可以跨分区，可以对目录使用。
+硬链接：权限与源文件都相同，操作等于拷贝cp -p + 同步更新。可以通过i节点识别，硬链接的i节点与源文件相同，可使用`ls -i 目标文件`查看文件的i节点。硬链接不能跨分区，不能针对目录使用。常用于实时同步备份代码。
